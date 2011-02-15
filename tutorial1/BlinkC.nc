@@ -39,20 +39,60 @@
 module BlinkC @safe()
 {
   uses interface Timer<TMilli> as Timer0;
+  uses interface Read<uint16_t>;
   uses interface Leds;
   uses interface Boot;
 }
 implementation
 {
+  uint16_t temp;
+  uint16_t index = 0;
+  uint8_t can_read = 1;
+
   event void Boot.booted()
   {
-    call Timer0.startPeriodic( 1000 );
+    call Timer0.startOneShot( 1000 );
   }
 
   event void Timer0.fired()
   {
-    call Leds.led0Toggle();
+        if (can_read == 1) {
+            call Read.read();
+        } else {
+            call Leds.led0On();
+            call Leds.led1On();
+            call Leds.led2On();
+            if (index == 15) {
+                if ((temp & 1) == 1) {
+                    call Leds.led0On();
+                }
+                can_read = can_read ^ 1;
+                index = 0;
+                call Timer0.startOneShot(5000);
+            } else {
+                if ((temp & 1) == 1) {
+                    call Leds.led0On();
+                }
+                if ((temp & 2) == 1) {
+                    call Leds.led1On();
+                }
+                if ((temp & 4) == 1) {
+                    call Leds.led2On();
+                }
+                temp >>= 3;
+                index += 3;
+                call Timer0.startOneShot(1000);
+            }
+        }
   }
+
+
+  event void Read.readDone(error_t result, uint16_t data) {
+    temp = data;
+    can_read = can_read ^ 1;
+    call Timer0.startOneShot(1000);
+  }
+
 
 }
 

@@ -43,12 +43,13 @@ configuration BlinkAppC
 implementation
 {
   components MainC, BlinkC, LedsC;
-  components new TimerMilliC() as Timer0;
+  components new TempC() as Temp0;
+  components new TimerMilliC() as Timer0; 
 
 
-  BlinkC = MainC.Boot;
-
+  BlinkC.Boot -> MainC.Boot;
   BlinkC.Timer0 -> Timer0;
   BlinkC.Leds -> LedsC;
+  BlinkC.Read -> Temp0;
 }
 

@@ -47,12 +47,15 @@ implementation
 {
   event void Boot.booted()
   {
-    call Timer0.startPeriodic( 1000 );
+    call Timer0.startPeriodic(10000);
   }
 
   event void Timer0.fired()
   {
-    call Read.read();
+    uint32_t i;
+    for(i = 0; i < 400001; i++) {
+      call Leds.led0Toggle();
+    }
   }
   
   event void Read.readDone(error_t result, uint16_t data)

@@ -52,9 +52,13 @@ implementation
 
   event void Timer0.fired()
   {
+    post ledsTaks();
+  }
+  
+  task void ledsTask() {
     uint32_t i;
-    for(i = 0; i < 400001; i++) {
-      call Leds.led0Toggle();
+    for (i = 0; i < 400001; i++) {
+      Leds.led0Toggle();
     }
   }
   

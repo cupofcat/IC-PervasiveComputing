@@ -41,6 +41,7 @@ module BlinkC @safe()
   uses interface Timer<TMilli> as Timer0;
   uses interface Leds;
   uses interface Boot;
+  uses interface Read<uint16_t>;
 }
 implementation
 {
@@ -51,7 +52,26 @@ implementation
 
   event void Timer0.fired()
   {
-    call Leds.led0Toggle();
+    call Read.read();
+  }
+  
+  event void Read.readDone(error_t result, uint16_t data)
+  {
+    //display bottom 8 bits on the leds
+    if (result == SUCCESS) {
+      if (data & 0x0004)
+        call Leds.led2On();
+      else
+        call Leds.led2Off();
+      if (data & 0x0002)
+        call Leds.led1On();
+      else
+        call Leds.led1Off();
+      if (data & 0x0001)
+        call Leds.led0On();
+      else
+        call Leds.led0Off();
+    }
   }
 
 }

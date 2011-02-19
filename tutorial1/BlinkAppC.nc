@@ -43,6 +43,7 @@ configuration BlinkAppC
 implementation
 {
   components MainC, BlinkC, LedsC;
+  components new TempC() as TempSensor;
   components new TimerMilliC() as Timer0;
 
 
@@ -50,5 +51,6 @@ implementation
 
   BlinkC.Timer0 -> Timer0;
   BlinkC.Leds -> LedsC;
+  BlinkC.Read -> TempSensor
 }
 

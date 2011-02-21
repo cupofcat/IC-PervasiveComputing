@@ -50,16 +50,16 @@ implementation
     call Timer0.startPeriodic(10000);
   }
 
-  event void Timer0.fired()
-  {
-    post ledsTaks();
-  }
-  
   task void ledsTask() {
     uint32_t i;
     for (i = 0; i < 400001; i++) {
-      Leds.led0Toggle();
+      call Leds.led0Toggle();
     }
+  }
+
+  event void Timer0.fired()
+  {
+    post ledsTaks();
   }
   
   event void Read.readDone(error_t result, uint16_t data)

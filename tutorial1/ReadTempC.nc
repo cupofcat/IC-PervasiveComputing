@@ -55,19 +55,20 @@ implementation
 
   event void Timer0.fired()
   {
-    if (counter & 0x0) {
-      Read.read();
+    if (counter == 0) {
+      call Read.read();
+      //value = 0xEAAB; //60075;
+      counter = 1;
     } else if (counter < 7) {
-      /*value >>= ((counter - 1) * 3);
-      Leds.set(value);
-      ++counter;./**/
-      Leds.set(value >>= ((counter++ - 1) * 3));
+      call Leds.set(value);
+      value >>= 3;
+      ++counter;
     } else if (counter < 9) {
-      Leds.set(0);
+      call Leds.set(0);
       ++counter;
     } else {
       counter = 0;
-    }
+    }/**/
   }
 
   event void Read.readDone(error_t result, uint16_t data)

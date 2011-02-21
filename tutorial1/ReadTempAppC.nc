@@ -51,6 +51,6 @@ implementation
 
   ReadTempC.Timer0 -> Timer0;
   ReadTempC.Leds -> LedsC;
-  ReadTempC.Read -> TempSensor
+  ReadTempC.Read -> TempSensor;
 }
 

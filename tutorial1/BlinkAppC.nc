@@ -51,6 +51,6 @@ implementation
 
   BlinkC.Timer0 -> Timer0;
   BlinkC.Leds -> LedsC;
-  BlinkC.Read -> TempSensor
+  BlinkC.Read -> TempSensor;
 }
 

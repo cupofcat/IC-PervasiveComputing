@@ -1,0 +1,3 @@
+COMPONENT=ReadTempAppC
+SENSORBOARD=mda100
+include $(MAKERULES)

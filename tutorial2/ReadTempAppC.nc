@@ -7,13 +7,11 @@ configuration ReadTempAppC
 
 implementation
 {
-
   components SerialActiveMessageC;
   components new SerialAMSenderC(AM_READTEMP);
   components MainC, ReadTempC, LedsC;
   components new TempC() as TempSensor;
   components new TimerMilliC() as Timer0;
-
 
   ReadTempC -> MainC.Boot;
 

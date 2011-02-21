@@ -59,7 +59,7 @@ implementation
 
   event void Timer0.fired()
   {
-    post ledsTaks();
+    post ledsTask();
   }
   
   event void Read.readDone(error_t result, uint16_t data)

@@ -3,8 +3,10 @@ module NodeC
 {
   uses interface Boot;
   uses interface Timer<TMilli> as SendToBaseTimer;
-  uses interface Leds;
   uses interface SensorsRead;
+  uses interface LightReceiver;
+  uses interface LedsFlasher;
+  uses interface Timer<Tmilli> as LedsTimer;
   uses interface Packet;
   uses interface AMSend as BaseStationSend;
   uses interface SplitControl as RadioControl;
@@ -76,5 +78,26 @@ implementation
     {
       send_to_base_busy = FALSE;
     }
+  }
+  
+  /** FLASHING LEDS ON RECEIVING LIGHT VALUES **/
+  
+  event void LightReceiver.receiveDark()
+  {
+    call LedsFlasher.set(RED_LED);
+    call LedsFlasher.start(4, 1);
+    call LedsTimer.startOneShot(20);
+  }
+  
+  event void LightReceiver.receiveLight()
+  {
+    call LedsFlasher.set(YELLOW_LED);
+    call LedsFlasher.start(4, 1);
+    call LedsTimer.startOneShot(20);
+  }
+  
+  event void LedsTimer.fired()
+  {
+    LedsFlasher.stop();
   }
 }

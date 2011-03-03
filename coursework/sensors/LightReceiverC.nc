@@ -26,4 +26,3 @@ implementation
     return msg;
   }
 }
-

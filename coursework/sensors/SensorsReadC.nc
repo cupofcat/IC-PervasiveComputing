@@ -33,4 +33,3 @@ implementation
     signal SensorsRead.readDone();
   }
 }
-

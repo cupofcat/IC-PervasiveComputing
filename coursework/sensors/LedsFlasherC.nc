@@ -14,7 +14,6 @@ implementation
 {
   uint8_t mask;
   uint16_t flash_time;
-  uint8_t off = 0;
   
   command void set(uint8_t mask_)
   {
@@ -30,7 +29,7 @@ implementation
   event void PeriodTimer.fired()
   {
     call Leds.set(mask);
-    call TurnOffTimer.startOneShot(flash_time_)
+    call TurnOffTimer.startOneShot(flash_time)
   }
   
   event void TurnOffTimer.fired()

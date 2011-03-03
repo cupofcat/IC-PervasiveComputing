@@ -1,9 +1,8 @@
-#include "Node.h"
 
 module NodeC
 {
   uses interface Boot;
-  uses interface Timer<TMilli> SendToBaseTimer;
+  uses interface Timer<TMilli> as SendToBaseTimer;
   uses interface Leds;
   uses interface SensorsRead;
   uses interface Packet;
@@ -40,28 +39,28 @@ implementation
   
   /** READ SENSORS AND SEND **/
 
-  event void SendToBase.fired()
+  event void SendToBaseTimer.fired()
   {
-    if (send_to_base_busy)
+    if (!send_to_base_busy)
     {
-      return;
-    }
+      // Obtain the address of payload inside the packet
+      // TODO: This possibly can be called only once, because the address
+      //       to pkt is always the same (?)
 
-    // Obtain the address of payload inside the packet
-    // TODO: This possibly can be called only once, because the address
-    //       to pkt is always the same (?)
-    SensorsReadingsMsg* readings =
-        (SensorsReadingsMsg*)(call Packet.getPayload(
-                                              &pkt,
-                                              sizeof (SensorsReadingsMsg)));
+      SensorsReadingsMsg* readings =
+         (SensorsReadingsMsg*)(call Packet.getPayload(
+                                               &pkt,
+                                               sizeof (SensorsReadingsMsg)));
     
-    call SensorsRead.read(readings);  
+      call SensorsRead.read(readings);
+    }
   }
 
   event void SensorsRead.readDone()
   {
     // Send the readings to base station
-    if (call BaseStationSend.send(BASE_STATION_ADDR,
+    //TODO: Should it be AM_BROADCAST_ADDR?
+    if (call BaseStationSend.send(AM_BROADCAST_ADDR,
                                   &pkt,
                                   sizeof(SensorsReadingsMsg)) == SUCCESS)
     {

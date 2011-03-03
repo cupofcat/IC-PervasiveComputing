@@ -6,18 +6,20 @@ configuration NodeAppC
 implementation
 {
   components MainC, LedsC;
-  components new TimerMilliC() as SendToBaseTimer;
+  components new TimerMilliC() as BaseStationTimer;
   components new TempC() as TempSensor;
-  components SensorsReadC;
   components ActiveMessageC;  
   components new AMSenderC(AM_BASE) as BaseStationSender;
 
-  components NodeC as App;
+  components SensorsReadC;
+  SensorsReadC.TemperatureRead -> TempSensor;
+  SensorsReadC.LightRead -> TempSensor;
 
+  components NodeC as App;
   App -> MainC.Boot;
-  App.SendToBaseTimer -> SendToBaseTimer;
+  App.SendToBaseTimer -> BaseStationTimer;
   App.Leds -> LedsC;
-  App.SensorRead -> SensorReadC;
+  App.SensorsRead -> SensorsReadC;
   App.Packet -> BaseStationSender;
   
   App.BaseStationSend -> BaseStationSender;

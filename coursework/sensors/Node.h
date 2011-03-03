@@ -5,13 +5,13 @@ enum {
   AM_BASE = 10
 };
 
-typedef struct SensorsReadingsMsg{
-  uint16_t raw_temp;
-  uint16_t raw_light;
+typedef nx_struct SensorsReadingsMsg {
+  nx_uint16_t raw_temp;
+  nx_uint16_t raw_light;
 } SensorsReadingsMsg;
 
 enum {
-  SEND_TO_BASE_INTERVALS = 1000
+  SEND_TO_BASE_INTERVALS = 1000,
 };
 
 #endif

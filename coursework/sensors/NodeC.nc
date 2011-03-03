@@ -5,7 +5,7 @@ module NodeC
   uses interface SensorsRead;
   uses interface LightReceiver;
   uses interface LedsFlasher;
-  uses interface Timer<Tmilli> as LedsTimer;
+  uses interface Timer<TMilli> as LedsTimer;
   uses interface Packet;
   uses interface AMSend as BaseStationSend;
   uses interface SplitControl as RadioControl;
@@ -97,6 +97,6 @@ implementation
 
   event void LedsTimer.fired()
   {
-    LedsFlasher.stop();
+    call LedsFlasher.stop();
   }
 }

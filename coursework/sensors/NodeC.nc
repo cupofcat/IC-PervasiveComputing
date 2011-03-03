@@ -1,4 +1,3 @@
-
 module NodeC
 {
   uses interface Boot;

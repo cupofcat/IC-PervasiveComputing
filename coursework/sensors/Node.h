@@ -8,7 +8,7 @@ const uint8_t YELLOW_LED = 2;
 const uint8_t ORANGE_LED = 4;
 
 enum {
-  AM_BASE = 10
+  AM_SENSORSREADINGSMSG = 10
 };
 
 typedef nx_struct SensorsReadingsMsg {

@@ -13,6 +13,7 @@ module NodeC
 implementation
 {
   bool send_to_base_busy = FALSE;
+  SensorsReadingsMsg* readings
   message_t pkt;
 
   /** INITIALISATIONS **/
@@ -47,10 +48,8 @@ implementation
       // Obtain the address of payload inside the packet
       // TODO: This possibly can be called only once, because the address
       //       to pkt is always the same (?)
-      SensorsReadingsMsg* readings =
-         (SensorsReadingsMsg*)(call Packet.getPayload(
-                                               &pkt,
-                                               sizeof (SensorsReadingsMsg)));
+      readings = (SensorsReadingsMsg*)(call Packet.getPayload(&pkt,
+                                                sizeof (SensorsReadingsMsg)));
     
       call SensorsRead.read(readings);
     }

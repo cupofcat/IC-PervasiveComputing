@@ -11,7 +11,7 @@ implementation
   SensorsReadC.LightRead -> TempSensor;
   
   components LightReceiverC;
-  components new AMReceiverC(AM_BASE);
+  components new AMReceiverC(AM_SENSORSREADINGSMSG);
   LightReceiverC.Receive -> AMReceiverC;
   
   components LedsFlasherC;
@@ -27,7 +27,7 @@ implementation
   components new TimerMilliC() as BaseStationTimer;
   components new TimerMilliC() as LedsTimer3;
   components ActiveMessageC;  
-  components new AMSenderC(AM_BASE) as BaseStationSender;
+  components new AMSenderC(AM_SENSORSREADINGSMSG) as BaseStationSender;
   App -> MainC.Boot;
   App.SensorsRead -> SensorsReadC;
   App.LightReceiver -> LightReceiverC;

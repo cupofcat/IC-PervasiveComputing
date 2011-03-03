@@ -7,7 +7,7 @@ module NodeC
   uses interface LedsFlasher;
   uses interface Timer<TMilli> as LedsTimer;
   uses interface Packet;
-  uses interface AMSend as BaseStationSend;
+  uses interface AMSend as BaseStationSend; //TODO: Change the name - we're broadcasting
   uses interface SplitControl as RadioControl;
 }
 implementation
@@ -47,7 +47,6 @@ implementation
       // Obtain the address of payload inside the packet
       // TODO: This possibly can be called only once, because the address
       //       to pkt is always the same (?)
-
       SensorsReadingsMsg* readings =
          (SensorsReadingsMsg*)(call Packet.getPayload(
                                                &pkt,
@@ -59,16 +58,13 @@ implementation
 
   event void SensorsRead.readDone()
   {
-    // Send the readings to base station
-    //TODO: Should it be AM_BROADCAST_ADDR? Or just levae it, so neighbours receive it as well?
+    // Broadcast the readings
     if (call BaseStationSend.send(AM_BROADCAST_ADDR,
                                   &pkt,
                                   sizeof(SensorsReadingsMsg)) == SUCCESS)
     {
       send_to_base_busy = TRUE;
     }
-    
-    //TODO: Send the light to neighbour (of maybe just broadcast everywhere the same, as now?)
   }
 
   event void BaseStationSend.sendDone(message_t* msg, error_t error)

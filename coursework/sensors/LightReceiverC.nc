@@ -15,7 +15,7 @@ implementation
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
   {
     SensorsReadingsMsg* readings = (SensorsReadingsMsg*)payload;
-    if (payload->raw_light < RAW_LIGHT_TRESHOLD)
+    if (readings->raw_light < RAW_LIGHT_TRESHOLD)
     {
       signal LightReceiver.receiveDark();
     }

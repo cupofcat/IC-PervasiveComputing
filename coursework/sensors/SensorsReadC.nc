@@ -1,3 +1,5 @@
+#include "Node.h"
+
 module SensorsReadC
 {
   uses

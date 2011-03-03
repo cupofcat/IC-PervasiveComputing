@@ -1,3 +1,5 @@
+#include "Node.h"
+
 interface SensorsRead
 {
   /**

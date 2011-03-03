@@ -1,0 +1,199 @@
+/*									tab:4
+ * "Copyright (c) 2000-2005 The Regents of the University  of California.  
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify, and distribute this software and
+ * its documentation for any purpose, without fee, and without written
+ * agreement is hereby granted, provided that the above copyright
+ * notice, the following two paragraphs and the author appear in all
+ * copies of this software.
+ * 
+ * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY
+ * PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+ * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS
+ * DOCUMENTATION, EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
+ * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
+ *
+ * Copyright (c) 2002-2005 Intel Corporation
+ * All rights reserved.
+ *
+ * This file is distributed under the terms in the attached INTEL-LICENSE     
+ * file. If you do not find these files, copies can be found by writing to
+ * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
+ * 94704.  Attention:  Intel License Inquiry.
+ */
+/* Authors:	Phil Levis <pal@cs.berkeley.edu>
+ * Date:        December 1 2005
+ * Desc:        Generic Message reader
+ *               
+ */
+
+/**
+ * @author Phil Levis <pal@cs.berkeley.edu>
+ */
+
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import net.tinyos.message.*;
+import net.tinyos.packet.*;
+import net.tinyos.util.*;
+
+public class MsgReader implements net.tinyos.message.MessageListener {
+
+  private MoteIF moteIF;
+  private static HttpClient httpClient = new DefaultHttpClient();
+  private static HttpPost httpPost = new HttpPost("http:146.169.36.125:8080/energyData/data");
+  private static HttpResponse response;
+  
+  public MsgReader(String source) throws Exception {
+    if (source != null) {
+      moteIF = new MoteIF(BuildSource.makePhoenix(source, PrintStreamMessenger.err));
+    }
+    else {
+      moteIF = new MoteIF(BuildSource.makePhoenix(PrintStreamMessenger.err));
+    }
+  }
+
+  public void start() {
+  }
+
+  Collection<SensorMsg> sensorData;
+  JSONObject dataJSON;
+  JSONObject resultJSON;
+  boolean isOk;
+  String errorCode;
+  String errorMessage;
+  
+  public void messageReceived(int to, Message message) {
+    //long t = System.currentTimeMillis();
+    SensorMsg sMessage = (SensorMsg) message;
+    
+    sensorData = new LinkedList<SensorMsg>();
+    sensorData.add(sMessage);
+    dataJSON = SensorData.buildSensorDataJSON(sensorData);
+    
+    // Send JSON
+    httpPost.addHeader("Content-type","application/json");
+    httpPost.addHeader("Accept","application/json");
+    StringEntity se = null;
+	try {
+		se = new StringEntity(dataJSON.toString());
+	} catch (UnsupportedEncodingException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
+    httpPost.setEntity(se);
+    
+    // Parse response
+    try {
+		response = httpClient.execute(httpPost);
+	} catch (ClientProtocolException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (IOException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}	    
+
+    BufferedReader buffReader = null;
+    String json;
+	try {
+		buffReader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+		json = buffReader.readLine();
+	} catch (UnsupportedEncodingException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (IllegalStateException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	} catch (IOException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
+
+    //JSONTokener tokener = new JSONTokener(json);
+    try {
+		resultJSON = new JSONObject(json);
+		isOk = resultJSON.getBoolean("OK");
+		if(!isOk) {
+			errorCode = resultJSON.getString("errorCode");
+			errorMessage = resultJSON.getString("errorMessage");
+			System.out.println(errorCode + ": " + errorMessage);
+		}
+	} catch (JSONException e) {
+		e.printStackTrace();
+	}
+  }
+
+  
+  private static void usage() {
+    System.err.println("usage: MsgReader [-comm <source>] message-class [message-class ...]");
+  }
+
+  private void addMsgType(Message msg) {
+    moteIF.registerListener(msg, this);
+  }
+  
+  public static void main(String[] args) throws Exception {
+    String source = null;
+    Vector v = new Vector();
+    if (args.length > 0) {
+      for (int i = 0; i < args.length; i++) {
+	if (args[i].equals("-comm")) {
+	  source = args[++i];
+	}
+	else {
+	  String className = args[i];
+	  try {
+	    Class c = Class.forName(className);
+	    Object packet = c.newInstance();
+	    Message msg = (Message)packet;
+	    if (msg.amType() < 0) {
+		System.err.println(className + " does not have an AM type - ignored");
+	    }
+	    else {
+		v.addElement(msg);
+	    }
+	  }
+	  catch (Exception e) {
+	    System.err.println(e);
+	  }
+	}
+      }
+    }
+    else if (args.length != 0) {
+      usage();
+      System.exit(1);
+    }
+
+    MsgReader mr = new MsgReader(source);
+    Enumeration msgs = v.elements();
+    while (msgs.hasMoreElements()) {
+      Message m = (Message)msgs.nextElement();
+      mr.addMsgType(m);
+    }
+    mr.start();
+  }
+
+
+}

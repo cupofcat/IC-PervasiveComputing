@@ -61,7 +61,7 @@ implementation
   event void SensorsRead.readDone()
   {
     // Send the readings to base station
-    //TODO: Should it be AM_BROADCAST_ADDR?
+    //TODO: Should it be AM_BROADCAST_ADDR? Or just levae it, so neighbours receive it as well?
     if (call BaseStationSend.send(AM_BROADCAST_ADDR,
                                   &pkt,
                                   sizeof(SensorsReadingsMsg)) == SUCCESS)
@@ -69,7 +69,7 @@ implementation
       send_to_base_busy = TRUE;
     }
     
-    //TODO: Send the light to neighbour
+    //TODO: Send the light to neighbour (of maybe just broadcast everywhere the same, as now?)
   }
 
   event void BaseStationSend.sendDone(message_t* msg, error_t error)
@@ -79,23 +79,23 @@ implementation
       send_to_base_busy = FALSE;
     }
   }
-  
+
   /** FLASHING LEDS ON RECEIVING LIGHT VALUES **/
-  
+
   event void LightReceiver.receiveDark()
   {
     call LedsFlasher.set(RED_LED);
     call LedsFlasher.start(4, 1);
     call LedsTimer.startOneShot(20);
   }
-  
+
   event void LightReceiver.receiveLight()
   {
     call LedsFlasher.set(YELLOW_LED);
     call LedsFlasher.start(4, 1);
     call LedsTimer.startOneShot(20);
   }
-  
+
   event void LedsTimer.fired()
   {
     LedsFlasher.stop();

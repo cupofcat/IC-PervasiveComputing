@@ -38,21 +38,7 @@
  * @author Phil Levis <pal@cs.berkeley.edu>
  */
 
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.*;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import net.tinyos.message.*;
 import net.tinyos.packet.*;
@@ -61,9 +47,7 @@ import net.tinyos.util.*;
 public class MsgReader implements net.tinyos.message.MessageListener {
 
   private MoteIF moteIF;
-  private static HttpClient httpClient = new DefaultHttpClient();
-  private static HttpPost httpPost = new HttpPost("http:146.169.36.125:8080/energyData/data");
-  private static HttpResponse response;
+  private MsgDispatcher dispatcher = new MsgDispatcher();
   
   public MsgReader(String source) throws Exception {
     if (source != null) {
@@ -76,73 +60,11 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 
   public void start() {
   }
-
-  Collection<SensorMsg> sensorData;
-  JSONObject dataJSON;
-  JSONObject resultJSON;
-  boolean isOk;
-  String errorCode;
-  String errorMessage;
   
   public void messageReceived(int to, Message message) {
-    //long t = System.currentTimeMillis();
-    SensorMsg sMessage = (SensorMsg) message;
-    
-    sensorData = new LinkedList<SensorMsg>();
-    sensorData.add(sMessage);
-    dataJSON = SensorData.buildSensorDataJSON(sensorData);
-    
-    // Send JSON
-    httpPost.addHeader("Content-type","application/json");
-    httpPost.addHeader("Accept","application/json");
-    StringEntity se = null;
-	try {
-		se = new StringEntity(dataJSON.toString());
-	} catch (UnsupportedEncodingException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-    httpPost.setEntity(se);
-    
-    // Parse response
-    try {
-		response = httpClient.execute(httpPost);
-	} catch (ClientProtocolException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	} catch (IOException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}	    
-
-    BufferedReader buffReader = null;
-    String json;
-	try {
-		buffReader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
-		json = buffReader.readLine();
-	} catch (UnsupportedEncodingException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	} catch (IllegalStateException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	} catch (IOException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-
-    //JSONTokener tokener = new JSONTokener(json);
-    try {
-		resultJSON = new JSONObject(json);
-		isOk = resultJSON.getBoolean("OK");
-		if(!isOk) {
-			errorCode = resultJSON.getString("errorCode");
-			errorMessage = resultJSON.getString("errorMessage");
-			System.out.println(errorCode + ": " + errorMessage);
-		}
-	} catch (JSONException e) {
-		e.printStackTrace();
-	}
+	  SensorMsg sMessage = (SensorMsg) message;
+	  dispatcher.sendMessageToVisualiser(sMessage);
+	  dispatcher.sendMessageToCouchDB(sMessage);
   }
 
   

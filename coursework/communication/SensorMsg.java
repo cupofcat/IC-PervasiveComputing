@@ -7,12 +7,12 @@
 public class SensorMsg extends net.tinyos.message.Message {
 
     /** The default size of this message type in bytes. */
-    public static final int DEFAULT_MESSAGE_SIZE = 4;
+    public static final int DEFAULT_MESSAGE_SIZE = 8;
 
     /** The Active Message type associated with this message. */
     public static final int AM_TYPE = 10;
 
-    /** Create a new SensorMsg of size 4. */
+    /** Create a new SensorMsg of size 8. */
     public SensorMsg() {
         super(DEFAULT_MESSAGE_SIZE);
         amTypeSet(AM_TYPE);
@@ -85,6 +85,12 @@ public class SensorMsg extends net.tinyos.message.Message {
     public String toString() {
       String s = "Message <SensorMsg> \n";
       try {
+        s += "  [node_id=0x"+Long.toHexString(get_node_id())+"]\n";
+      } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
+      try {
+        s += "  [event_type=0x"+Long.toHexString(get_event_type())+"]\n";
+      } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
+      try {
         s += "  [raw_temp=0x"+Long.toHexString(get_raw_temp())+"]\n";
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       try {
@@ -96,9 +102,135 @@ public class SensorMsg extends net.tinyos.message.Message {
     // Message-type-specific access methods appear below.
 
     /////////////////////////////////////////////////////////
-    // Accessor methods for field: raw_temp
+    // Accessor methods for field: node_id
     //   Field type: int, unsigned
     //   Offset (bits): 0
+    //   Size (bits): 16
+    /////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the field 'node_id' is signed (false).
+     */
+    public static boolean isSigned_node_id() {
+        return false;
+    }
+
+    /**
+     * Return whether the field 'node_id' is an array (false).
+     */
+    public static boolean isArray_node_id() {
+        return false;
+    }
+
+    /**
+     * Return the offset (in bytes) of the field 'node_id'
+     */
+    public static int offset_node_id() {
+        return (0 / 8);
+    }
+
+    /**
+     * Return the offset (in bits) of the field 'node_id'
+     */
+    public static int offsetBits_node_id() {
+        return 0;
+    }
+
+    /**
+     * Return the value (as a int) of the field 'node_id'
+     */
+    public int get_node_id() {
+        return (int)getUIntBEElement(offsetBits_node_id(), 16);
+    }
+
+    /**
+     * Set the value of the field 'node_id'
+     */
+    public void set_node_id(int value) {
+        setUIntBEElement(offsetBits_node_id(), 16, value);
+    }
+
+    /**
+     * Return the size, in bytes, of the field 'node_id'
+     */
+    public static int size_node_id() {
+        return (16 / 8);
+    }
+
+    /**
+     * Return the size, in bits, of the field 'node_id'
+     */
+    public static int sizeBits_node_id() {
+        return 16;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Accessor methods for field: event_type
+    //   Field type: int, unsigned
+    //   Offset (bits): 16
+    //   Size (bits): 16
+    /////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the field 'event_type' is signed (false).
+     */
+    public static boolean isSigned_event_type() {
+        return false;
+    }
+
+    /**
+     * Return whether the field 'event_type' is an array (false).
+     */
+    public static boolean isArray_event_type() {
+        return false;
+    }
+
+    /**
+     * Return the offset (in bytes) of the field 'event_type'
+     */
+    public static int offset_event_type() {
+        return (16 / 8);
+    }
+
+    /**
+     * Return the offset (in bits) of the field 'event_type'
+     */
+    public static int offsetBits_event_type() {
+        return 16;
+    }
+
+    /**
+     * Return the value (as a int) of the field 'event_type'
+     */
+    public int get_event_type() {
+        return (int)getUIntBEElement(offsetBits_event_type(), 16);
+    }
+
+    /**
+     * Set the value of the field 'event_type'
+     */
+    public void set_event_type(int value) {
+        setUIntBEElement(offsetBits_event_type(), 16, value);
+    }
+
+    /**
+     * Return the size, in bytes, of the field 'event_type'
+     */
+    public static int size_event_type() {
+        return (16 / 8);
+    }
+
+    /**
+     * Return the size, in bits, of the field 'event_type'
+     */
+    public static int sizeBits_event_type() {
+        return 16;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Accessor methods for field: raw_temp
+    //   Field type: int, unsigned
+    //   Offset (bits): 32
     //   Size (bits): 16
     /////////////////////////////////////////////////////////
 
@@ -120,14 +252,14 @@ public class SensorMsg extends net.tinyos.message.Message {
      * Return the offset (in bytes) of the field 'raw_temp'
      */
     public static int offset_raw_temp() {
-        return (0 / 8);
+        return (32 / 8);
     }
 
     /**
      * Return the offset (in bits) of the field 'raw_temp'
      */
     public static int offsetBits_raw_temp() {
-        return 0;
+        return 32;
     }
 
     /**
@@ -161,7 +293,7 @@ public class SensorMsg extends net.tinyos.message.Message {
     /////////////////////////////////////////////////////////
     // Accessor methods for field: raw_light
     //   Field type: int, unsigned
-    //   Offset (bits): 16
+    //   Offset (bits): 48
     //   Size (bits): 16
     /////////////////////////////////////////////////////////
 
@@ -183,14 +315,14 @@ public class SensorMsg extends net.tinyos.message.Message {
      * Return the offset (in bytes) of the field 'raw_light'
      */
     public static int offset_raw_light() {
-        return (16 / 8);
+        return (48 / 8);
     }
 
     /**
      * Return the offset (in bits) of the field 'raw_light'
      */
     public static int offsetBits_raw_light() {
-        return 16;
+        return 48;
     }
 
     /**

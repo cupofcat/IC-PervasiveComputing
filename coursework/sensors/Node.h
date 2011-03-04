@@ -12,6 +12,8 @@ enum {
 };
 
 typedef nx_struct SensorsReadingsMsg {
+  nx_uint16_t node_id;
+  nx_uint16_t event_type;
   nx_uint16_t raw_temp;
   nx_uint16_t raw_light;
 } SensorsReadingsMsg;

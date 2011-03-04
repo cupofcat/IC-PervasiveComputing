@@ -13,7 +13,7 @@ module NodeC
 implementation
 {
   bool send_to_base_busy = FALSE;
-  SensorsReadingsMsg* readings
+  SensorsReadingsMsg* readings;
   message_t pkt;
 
   /** INITIALISATIONS **/

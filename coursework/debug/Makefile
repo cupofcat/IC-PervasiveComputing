@@ -1,0 +1,5 @@
+COMPONENT=HiddenMoteAppC
+
+CFLAGS += $(INCLUDES)
+
+include $(MAKERULES)

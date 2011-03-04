@@ -1,0 +1,2 @@
+java -classpath .:/opt/tinyos-2.1.0/support/sdk/java/tinyos.jar net.tinyos.tools.MsgReader SensorsReadingsMsg -comm serial@/dev/ttyUSB1:micaz
+

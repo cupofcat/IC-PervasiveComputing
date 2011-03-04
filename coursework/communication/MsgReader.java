@@ -62,9 +62,12 @@ public class MsgReader implements net.tinyos.message.MessageListener {
   }
   
   public void messageReceived(int to, Message message) {
+	  System.out.println("RECEIVED MESSAGE!");
 	  SensorMsg sMessage = (SensorMsg) message;
-	  dispatcher.sendMessageToVisualiser(sMessage);
-	  dispatcher.sendMessageToCouchDB(sMessage);
+	  System.out.println(sMessage.get_raw_light());
+	  System.out.println(sMessage.get_raw_temp() + "******");
+	  //dispatcher.sendMessageToVisualiser(sMessage);
+	  //dispatcher.sendMessageToCouchDB(sMessage);
   }
 
   

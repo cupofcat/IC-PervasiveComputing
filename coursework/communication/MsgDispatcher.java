@@ -55,6 +55,7 @@ public class MsgDispatcher {
 	    httpPost.addHeader("Accept","application/json");
 	    StringEntity se = null;
 		try {
+			System.out.println("Sending the following json to visualizer: " + dataJSON.toString());
 			se = new StringEntity(dataJSON.toString());
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
@@ -87,6 +88,7 @@ public class MsgDispatcher {
 	    try {
 			resultJSON = new JSONObject(json);
 			isOk = resultJSON.getBoolean("OK");
+			System.out.println("Received response isOk (visualizer): " + isOk);
 			if(!isOk) {
 				errorCode = resultJSON.getString("errorCode");
 				errorMessage = resultJSON.getString("errorMessage");
@@ -99,11 +101,12 @@ public class MsgDispatcher {
 
 	public void sendMessageToCouchDB(SensorMsg message) {
 		JSONObject json = SensorData.buildSensorDataJSONForCouchDB(message);
+		System.out.println("Sending the following json to couchDb: " + json.toString());
 		Representation request = new StringRepresentation(json.toString(),MediaType.APPLICATION_JSON);
 		ClientResource client = new ClientResource(COUCH_DB_URL);
 		Representation r = client.put(request);
 	    try {
-			r.getText();
+			System.out.println("Received response(couchDB):" + r.getText());
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 

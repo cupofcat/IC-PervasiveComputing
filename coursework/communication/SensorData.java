@@ -1,6 +1,6 @@
 import java.util.Collection;
-
-import net.tinyos.message.Message;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,15 +14,80 @@ public class SensorData {
 	private static final String GROUP_NAME = "Group8";
 	private static final String EVENT_TYPE_FIRE = "FIRE";
 	private static final String EVENT_MSG_FIRE = "FIRE has broken out!";
+	private static final int BUFFER_SIZE = 10;
+	private static Queue<Long> tempBuffer = new LinkedBlockingQueue<Long>();
+	private static long minReading;
+	private static long maxReading; 
+	private static final long TEMP_TRESHOLD = 5;
+	private int lux;
+	private int temp;
+	private int nodeId;
+	private long timestamp;
+	private int eventType;
 
 
-	public static JSONObject toJSON(SensorMsg message) {
+	public int getLux() {
+		return lux;
+	}
+
+	public void setLux(int lux) {
+		this.lux = lux;
+	}
+
+	public int getTemp() {
+		return temp;
+	}
+
+	public void setTemp(int temp) {
+		this.temp = temp;
+	}
+
+	public int getNodeId() {
+		return nodeId;
+	}
+
+	public void setNodeId(int nodeId) {
+		this.nodeId = nodeId;
+	}
+
+	public long getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	public int getEventType() {
+		return eventType;
+	}
+
+	public void setEventType(int eventType) {
+		this.eventType = eventType;
+	}
+
+	public SensorData(SensorMsg sMessage) {
+		this.lux = sMessage.get_raw_light();
+		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
+		this.nodeId = sMessage.get_node_id();
+		this.timestamp = System.currentTimeMillis();
+		this.eventType = sMessage.get_event_type();
+	}
+
+	public SensorData() {}
+
+	private int normaliseToCelsius(int getRawTemp) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public JSONObject toJSON() {
 		JSONObject dataJSON = new JSONObject();
 		try {
-			dataJSON.put("sensorId", 1);
-			dataJSON.put("timestamp", System.currentTimeMillis());
-			dataJSON.put("temp", message.get_raw_temp());
-			dataJSON.put("lux", message.get_raw_light());
+			dataJSON.put("sensorId", nodeId);
+			dataJSON.put("timestamp", timestamp);
+			dataJSON.put("temp", temp);
+			dataJSON.put("lux", lux);
 		} catch (JSONException e) {
 			System.out.println("Building of individual sensor data JSONObject failed!");
 			e.printStackTrace();
@@ -30,7 +95,7 @@ public class SensorData {
 		return dataJSON;
 	}
 
-	public static JSONObject buildSensorDataJSON(Collection<SensorMsg> sensorData) {
+	public static JSONObject buildSensorDataJSON(Collection<SensorData> sensorData) {
 		JSONObject sensorDataJSON = new JSONObject();
 		try {
 			sensorDataJSON.put("groupId", GROUP_ID);
@@ -59,25 +124,55 @@ public class SensorData {
 		return eventJSON;
 	}
 
-	private static JSONArray toJSONArray(Collection<SensorMsg> sensorData) {
+	private static JSONArray toJSONArray(Collection<SensorData> sensorData) {
 		JSONArray dataArrayJSON = new JSONArray();
-		for(SensorMsg data : sensorData) {
-			dataArrayJSON.put(toJSON(data));
+		for(SensorData data : sensorData) {
+			dataArrayJSON.put(data.toJSON());
 		}
 		return dataArrayJSON;
 	}
 
-	public static JSONObject buildSensorDataJSONForCouchDB(SensorMsg message) {
+	public JSONObject buildSensorDataJSONForCouchDB() {
 		JSONObject documentJSON = new JSONObject();
 		try {
-			documentJSON.put("nodeId", message.get_node_id());
-			documentJSON.put("lux", message.get_raw_light());
-			documentJSON.put("temp", message.get_raw_temp());
+			documentJSON.put("nodeId", nodeId);
+			documentJSON.put("lux", lux);
+			documentJSON.put("temp", temp);
 			documentJSON.put("time", System.currentTimeMillis());
 		} catch (JSONException e) {
 			System.out.println("Building of document JSONObject failed!");
 			e.printStackTrace();
 		}
 		return documentJSON;
+	}
+
+	public static boolean fireDetected(long tempReading) {
+
+		if (tempBuffer.isEmpty()) {
+			minReading = tempReading;
+			maxReading = tempReading;
+		} 
+		
+		if(tempBuffer.size() == BUFFER_SIZE) {
+			tempBuffer.poll();
+		} 
+		
+		tempBuffer.add(tempReading);
+		
+		if(tempReading > maxReading) {
+			maxReading = tempReading;
+		} else if (tempReading < minReading) {
+			minReading = tempReading;
+		}
+		
+		if(maxReading - minReading >= TEMP_TRESHOLD) {
+			return true;
+		}
+		
+		return false;
+	}
+
+	public int normaliseTemperatureReading(long tempReading) {
+		return 10;
 	}
 }

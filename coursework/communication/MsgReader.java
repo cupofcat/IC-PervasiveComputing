@@ -47,7 +47,9 @@ import net.tinyos.util.*;
 public class MsgReader implements net.tinyos.message.MessageListener {
 
   private MoteIF moteIF;
-  private MsgDispatcher dispatcher = new MsgDispatcher();
+  private static MsgDispatcher dispatcher = new MsgDispatcher();
+  public static final int MESSAGE_TYPE_DEFAULT = 1;
+  public static final int MESSAGE_TYPE_POTENTIAL_FIRE = 0;
   
   public MsgReader(String source) throws Exception {
     if (source != null) {
@@ -62,12 +64,21 @@ public class MsgReader implements net.tinyos.message.MessageListener {
   }
   
   public void messageReceived(int to, Message message) {
+	  // Has to take values from MsgDispatcher.MESSAGE_TYPE_*
+	  int eventType = MsgDispatcher.MESSAGE_TYPE_DEFAULT;;
+	  SensorData sensorData = new SensorData((SensorMsg) message);
+	  
 	  System.out.println("RECEIVED MESSAGE!");
-	  SensorMsg sMessage = (SensorMsg) message;
-	  System.out.println(sMessage.get_raw_light());
-	  System.out.println(sMessage.get_raw_temp() + "******");
-	  //dispatcher.sendMessageToVisualiser(sMessage);
-	  //dispatcher.sendMessageToCouchDB(sMessage);
+	  System.out.println(sensorData.getTemp());
+	  System.out.println(sensorData.getLux() + "******");
+	  
+	  
+	  if(sensorData.getEventType() != MESSAGE_TYPE_POTENTIAL_FIRE) {
+		  dispatcher.sendSensorDataToCouchDB(sensorData);
+	  } else if (SensorData.fireDetected(sensorData.getTemp())) {
+		  eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
+	  }
+	  dispatcher.sendDataToVisualiser(sensorData, eventType);
   }
 
   
@@ -80,6 +91,7 @@ public class MsgReader implements net.tinyos.message.MessageListener {
   }
   
   public static void main(String[] args) throws Exception {
+	  
     String source = null;
     Vector v = new Vector();
     if (args.length > 0) {
@@ -119,6 +131,4 @@ public class MsgReader implements net.tinyos.message.MessageListener {
     }
     mr.start();
   }
-
-
 }

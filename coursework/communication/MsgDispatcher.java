@@ -22,34 +22,40 @@ import org.restlet.resource.ClientResource;
 public class MsgDispatcher {
 
 	private static HttpClient httpClient = new DefaultHttpClient();
-	private static HttpPost httpPost = new HttpPost("http:146.169.36.125:8080/energyData/data");
+	private static HttpPost httpPost;
+	private static final String BASE_URL = "http:146.169.36.125:8080/energy-data-service/";
+	private static final String DATA = "data";
+	private static final String EVENT = "event";
 	private static HttpResponse response;
-	private static final String COUCH_DB_URL = "http://http://146.169.36.132/:5984/sensor_readings/";
-	private static final int MESSAGE_TYPE_FIRE = 0;
+	private static final String COUCH_DB_URL = "http://146.169.36.132:5984/sensor_readings/";
+	public static final int MESSAGE_TYPE_FIRE = 0;
+	public static final int MESSAGE_TYPE_DEFAULT = 1;
 		  
-	private Collection<SensorMsg> sensorData;
+	private Collection<SensorData> sensorData;
 	private JSONObject dataJSON;
     private	JSONObject resultJSON;
 	private boolean isOk;
 	private String errorCode;
 	private String errorMessage;
+	private static long id = 0;
 	  
-	public void sendMessageToVisualiser(SensorMsg message) {
+	public void sendDataToVisualiser(SensorData message, int eventType) {
 	    
-	    sensorData = new LinkedList<SensorMsg>();
+	    sensorData = new LinkedList<SensorData>();
 	    sensorData.add(message);
-	    switch(message.get_event_type()) {
+	    switch(eventType) {
 		    case(MESSAGE_TYPE_FIRE): {
+		    	httpPost = new HttpPost(BASE_URL);
 		    	dataJSON = SensorData.buildFireEventJSON();
 		    	break;
 		    }
 		    default: {
+		    	httpPost = new HttpPost(BASE_URL);
 		    	dataJSON = SensorData.buildSensorDataJSON(sensorData); 
 		    	break;
 		    }
 	    }
-	    dataJSON = SensorData.buildSensorDataJSON(sensorData);
-	    
+
 	    // Send JSON to visualiser
 	    httpPost.addHeader("Content-type","application/json");
 	    httpPost.addHeader("Accept","application/json");
@@ -99,11 +105,12 @@ public class MsgDispatcher {
 		}
 	}
 
-	public void sendMessageToCouchDB(SensorMsg message) {
-		JSONObject json = SensorData.buildSensorDataJSONForCouchDB(message);
+	public void sendSensorDataToCouchDB(SensorData message) {
+		JSONObject json = message.buildSensorDataJSONForCouchDB();
 		System.out.println("Sending the following json to couchDb: " + json.toString());
 		Representation request = new StringRepresentation(json.toString(),MediaType.APPLICATION_JSON);
-		ClientResource client = new ClientResource(COUCH_DB_URL);
+		ClientResource client = new ClientResource(COUCH_DB_URL + "/" + id);
+		id++;
 		Representation r = client.put(request);
 	    try {
 			System.out.println("Received response(couchDB):" + r.getText());

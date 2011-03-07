@@ -17,17 +17,31 @@ public class SensorData {
 	private static final String EVENT_TYPE_FIRE = "FIRE";
 	private static final String EVENT_MSG_FIRE = "FIRE has broken out!";
 	private static final int BUFFER_SIZE = 10;
-	private static Queue<Long> tempBuffer = new LinkedBlockingQueue<Long>();
-	private static long minReading;
-	private static long maxReading; 
 	private static final long TEMP_TRESHOLD = 5;
+	
+	private Queue<Long> tempBuffer;
+	private long minReading;
+	private long maxReading; 
+	
 	private int lux;
 	private int temp;
 	private int nodeId;
 	private long timestamp;
 	private int eventType;
 
+	public SensorData() {
+		this.tempBuffer = new LinkedBlockingQueue<Long>();
+	}
 
+	public SensorData(SensorMsg sMessage) {
+		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.lux = sMessage.get_raw_light();
+		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
+		this.nodeId = sMessage.get_node_id();
+		this.timestamp = System.currentTimeMillis();
+		this.eventType = sMessage.get_event_type();
+	}
+	
 	public int getLux() {
 		return lux;
 	}
@@ -67,16 +81,6 @@ public class SensorData {
 	public void setEventType(int eventType) {
 		this.eventType = eventType;
 	}
-
-	public SensorData(SensorMsg sMessage) {
-		this.lux = sMessage.get_raw_light();
-		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
-		this.nodeId = sMessage.get_node_id();
-		this.timestamp = System.currentTimeMillis();
-		this.eventType = sMessage.get_event_type();
-	}
-
-	public SensorData() {}
 
 	private int normaliseToCelsius(int getRawTemp) {
 		// TODO Auto-generated method stub
@@ -148,7 +152,7 @@ public class SensorData {
 		return documentJSON;
 	}
 
-	public static boolean fireDetected(long tempReading) {
+	public boolean fireDetected(long tempReading) {
 
 		if (tempBuffer.isEmpty()) {
 			minReading = tempReading;
@@ -177,4 +181,5 @@ public class SensorData {
 	public int normaliseTemperatureReading(long tempReading) {
 		return 10;
 	}
+
 }

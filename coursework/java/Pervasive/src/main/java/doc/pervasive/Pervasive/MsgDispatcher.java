@@ -25,24 +25,27 @@ public class MsgDispatcher {
 	public static final int MESSAGE_TYPE_FIRE = 0;
 	public static final int MESSAGE_TYPE_DEFAULT = 1;
 	
-	private static HttpClient httpClient = new DefaultHttpClient();
-	private static HttpPost httpPost;
-	private static HttpResponse response;
-	
 	private static final String BASE_URL = "http:146.169.36.125:8080/energy-data-service/";
 	private static final String DATA = "data";
 	private static final String EVENT = "event";
 	private static final String COUCH_DB_URL = "http://146.169.36.132:5984/sensor_readings/";
-	
-		  
+
+	private static long id = 0;	
+
+	private HttpClient httpClient;
+	private HttpPost httpPost;
+	private HttpResponse httpResponse;
 	private Collection<SensorData> sensorData;
 	private JSONObject dataJSON;
     private	JSONObject resultJSON;
 	private boolean isOk;
 	private String errorCode;
 	private String errorMessage;
-	private static long id = 0;
-	  
+
+	public MsgDispatcher() {
+		httpClient = new DefaultHttpClient();
+	}
+	
 	public void sendDataToVisualiser(SensorData message, int eventType) {
 	    
 	    sensorData = new LinkedList<SensorData>();
@@ -63,28 +66,31 @@ public class MsgDispatcher {
 	    // Send JSON to visualiser
 	    httpPost.addHeader("Content-type","application/json");
 	    httpPost.addHeader("Accept","application/json");
-	    StringEntity se = null;
+
+	    StringEntity stringEntity = null;
 		try {
 			System.out.println("Sending the following json to visualizer: " + dataJSON.toString());
-			se = new StringEntity(dataJSON.toString());
-		} catch (UnsupportedEncodingException e1) {
-			e1.printStackTrace();
+			stringEntity = new StringEntity(dataJSON.toString());
+		} catch (UnsupportedEncodingException e) {
+			System.out.println("Cannot create StringEntity");
+			e.printStackTrace();
 		}
-	    httpPost.setEntity(se);
+		
+	    httpPost.setEntity(stringEntity);
 	    
 	    // Parse response
 	    try {
-			response = httpClient.execute(httpPost);
-		} catch (ClientProtocolException e1) {
-			e1.printStackTrace();
-		} catch (IOException e1) {
-			e1.printStackTrace();
+			httpResponse = httpClient.execute(httpPost);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}	    
 
 	    BufferedReader buffReader = null;
 	    String json = "";
 		try {
-			buffReader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
+			buffReader = new BufferedReader(new InputStreamReader(httpResponse.getEntity().getContent(), "UTF-8"));
 			json = buffReader.readLine();
 		} catch (UnsupportedEncodingException e1) {
 			e1.printStackTrace();
@@ -111,8 +117,9 @@ public class MsgDispatcher {
 
 	public void sendSensorDataToCouchDB(SensorData message) {
 		JSONObject json = message.buildSensorDataJSONForCouchDB();
-		System.out.println("Sending the following json to couchDb: " + json.toString());
-		Representation request = new StringRepresentation(json.toString(),MediaType.APPLICATION_JSON);
+		System.out.println("Sending the following json to CouchDB: " + json.toString());
+
+		Representation request = new StringRepresentation(json.toString(), MediaType.APPLICATION_JSON);
 		ClientResource client = new ClientResource(COUCH_DB_URL + "/" + id);
 		id++;
 		Representation r = client.put(request);

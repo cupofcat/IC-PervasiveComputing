@@ -48,89 +48,94 @@ import net.tinyos.util.*;
 
 public class MsgReader implements net.tinyos.message.MessageListener {
 
-  private MoteIF moteIF;
-  private static MsgDispatcher dispatcher = new MsgDispatcher();
-  public static final int MESSAGE_TYPE_DEFAULT = 1;
-  public static final int MESSAGE_TYPE_POTENTIAL_FIRE = 0;
-  
-  public MsgReader(String source) throws Exception {
-    if (source != null) {
-      moteIF = new MoteIF(BuildSource.makePhoenix(source, PrintStreamMessenger.err));
-    }
-    else {
-      moteIF = new MoteIF(BuildSource.makePhoenix(PrintStreamMessenger.err));
-    }
-  }
+	public static final int MESSAGE_TYPE_DEFAULT = 1;
+	public static final int MESSAGE_TYPE_POTENTIAL_FIRE = 0;
 
-  public void start() {
-  }
+	private MoteIF moteIF;
+	private MsgDispatcher dispatcher;
   
-  public void messageReceived(int to, Message message) {
-	  // Has to take values from MsgDispatcher.MESSAGE_TYPE_*
-	  int eventType = MsgDispatcher.MESSAGE_TYPE_DEFAULT;;
-	  SensorData sensorData = new SensorData((SensorMsg) message);
-	  
-	  System.out.println("RECEIVED MESSAGE!");
-	  System.out.println(sensorData.getTemp());
-	  System.out.println(sensorData.getLux() + "******");
-	  
-	  
-	  if(sensorData.getEventType() != MESSAGE_TYPE_POTENTIAL_FIRE) {
-		  dispatcher.sendSensorDataToCouchDB(sensorData);
-	  } else if (SensorData.fireDetected(sensorData.getTemp())) {
-		  eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
-	  }
-	  dispatcher.sendDataToVisualiser(sensorData, eventType);
-  }
-
-  
-  private static void usage() {
-    System.err.println("usage: MsgReader [-comm <source>] message-class [message-class ...]");
-  }
-
-  private void addMsgType(Message msg) {
-    moteIF.registerListener(msg, this);
-  }
-  
-  public static void main(String[] args) throws Exception {
-	  
-    String source = null;
-    Vector v = new Vector();
-    if (args.length > 0) {
-      for (int i = 0; i < args.length; i++) {
-	if (args[i].equals("-comm")) {
-	  source = args[++i];
+	public MsgReader() {
+		this.dispatcher = new MsgDispatcher();
 	}
-	else {
-	  String className = args[i];
-	  try {
-	    Class c = Class.forName(className);
-	    Object packet = c.newInstance();
-	    Message msg = (Message)packet;
-	    if (msg.amType() < 0) {
-		System.err.println(className + " does not have an AM type - ignored");
-	    }
-	    else {
-		v.addElement(msg);
-	    }
-	  }
-	  catch (Exception e) {
-	    System.err.println(e);
-	  }
+	
+	public MsgReader(String source) throws Exception {
+		this.dispatcher = new MsgDispatcher();
+		if (source != null) {
+			moteIF = new MoteIF(BuildSource.makePhoenix(source, PrintStreamMessenger.err));
+		}
+		else {
+			moteIF = new MoteIF(BuildSource.makePhoenix(PrintStreamMessenger.err));
+		}
 	}
-      }
-    }
-    else if (args.length != 0) {
-      usage();
-      System.exit(1);
-    }
 
-    MsgReader mr = new MsgReader(source);
-    Enumeration msgs = v.elements();
-    while (msgs.hasMoreElements()) {
-      Message m = (Message)msgs.nextElement();
-      mr.addMsgType(m);
-    }
-    mr.start();
-  }
+	public void start() {
+	}
+  
+	public void messageReceived(int to, Message message) {
+		// Has to take values from MsgDispatcher.MESSAGE_TYPE_*
+		int eventType = MsgDispatcher.MESSAGE_TYPE_DEFAULT;;
+		SensorData sensorData = new SensorData((SensorMsg) message);
+	  
+		System.out.println("RECEIVED MESSAGE!");
+		System.out.println(sensorData.getTemp());
+		System.out.println(sensorData.getLux() + "******");
+		
+		if(sensorData.getEventType() != MESSAGE_TYPE_POTENTIAL_FIRE) {
+			dispatcher.sendSensorDataToCouchDB(sensorData);
+		} else if (sensorData.fireDetected(sensorData.getTemp())) {
+			eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
+		}
+		dispatcher.sendDataToVisualiser(sensorData, eventType);
+	}
+
+  
+	private static void usage() {
+		System.err.println("usage: MsgReader [-comm <source>] message-class [message-class ...]");
+	}
+
+	private void addMsgType(Message msg) {
+		moteIF.registerListener(msg, this);
+	}
+  
+	public static void main(String[] args) throws Exception {
+		String source = null;
+		Vector<Message> v = new Vector<Message>();
+		
+		if (args.length > 0) {
+			for (int i = 0; i < args.length; i++) {
+				if (args[i].equals("-comm")) {
+					source = args[++i];
+				}
+				else {
+					String className = args[i];
+					try {
+						Class c = Class.forName(className);
+						Object packet = c.newInstance();
+						Message msg = (Message)packet;
+						if (msg.amType() < 0) {
+							System.err.println(className + " does not have an AM type - ignored");
+						}
+						else {
+							v.addElement(msg);
+						}
+					}
+					catch (Exception e) {
+						System.err.println(e);
+					}
+				}
+			}
+		}
+		else if (args.length != 0) {
+			usage();
+			System.exit(1);
+		}
+
+		MsgReader msgReader = new MsgReader(source);
+		Enumeration<Message> msgs = v.elements();
+		while (msgs.hasMoreElements()) {
+			Message m = (Message)msgs.nextElement();
+			msgReader.addMsgType(m);
+		}
+		msgReader.start();
+	}
 }

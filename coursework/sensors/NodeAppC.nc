@@ -7,8 +7,9 @@ implementation
 {
   components SensorsReadC;
   components new TempC() as TempSensor;
+  components new PhotoC() as LightSensor;
   SensorsReadC.TemperatureRead -> TempSensor;
-  SensorsReadC.LightRead -> TempSensor;
+  SensorsReadC.LightRead -> LightSensor;
   
   components LightReceiverC;
   components new AMReceiverC(AM_SENSORSREADINGSMSG);
@@ -37,4 +38,6 @@ implementation
   App.RadioControl -> ActiveMessageC;
   App.Packet -> BaseStationSender;
   App.BaseStationSend -> BaseStationSender;
+
+  App.Leds -> LedsC;
 }

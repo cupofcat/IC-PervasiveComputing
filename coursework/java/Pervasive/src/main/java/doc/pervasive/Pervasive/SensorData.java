@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 public class SensorData {
 
+	private static final String ERROR = "ERROR: ";
 	private static final String GROUP_ID = "8";
 	private static final String KEY = "StoAhjeg";
 	private static final String GROUP_NAME = "Group8";
@@ -31,6 +32,11 @@ public class SensorData {
 
 	public SensorData() {
 		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.lux = 0;
+		this.temp = 0;
+		this.nodeId = 0;
+		this.timestamp = 0;
+		this.eventType = 0;
 	}
 
 	public SensorData(SensorMsg sMessage) {
@@ -86,30 +92,31 @@ public class SensorData {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-
-	public JSONObject toJSON() {
+	
+	public JSONObject toJSON(boolean noLux) {
 		JSONObject dataJSON = new JSONObject();
 		try {
 			dataJSON.put("sensorId", nodeId);
 			dataJSON.put("timestamp", timestamp);
-			dataJSON.put("temp", temp);
-			dataJSON.put("lux", lux);
+			dataJSON.put("temp", !noLux ? temp : null);
+			dataJSON.put("lux", noLux ? null : lux);
 		} catch (JSONException e) {
-			System.out.println("Building of individual sensor data JSONObject failed!");
+			System.out.println(ERROR + "Building of individual sensor data JSONObject failed!");
 			e.printStackTrace();
 		}
 		return dataJSON;
 	}
 
-	public static JSONObject buildSensorDataJSON(Collection<SensorData> sensorData) {
+	public static JSONObject buildSensorDataJSON(
+			Collection<SensorData> sensorData, boolean noLux) {
 		JSONObject sensorDataJSON = new JSONObject();
 		try {
 			sensorDataJSON.put("groupId", GROUP_ID);
 			sensorDataJSON.put("key", KEY);
 			sensorDataJSON.put("groupName", GROUP_NAME);
-			sensorDataJSON.put("sensorData", toJSONArray(sensorData));
+			sensorDataJSON.put("sensorData", toJSONArray(sensorData, noLux));
 		} catch (JSONException e) {
-			System.out.println("Building of collective sensor data JSONObject failed!");
+			System.out.println(ERROR + "Building of collective sensor data JSONObject failed!");
 			e.printStackTrace();
 		}
 		return sensorDataJSON;
@@ -130,10 +137,10 @@ public class SensorData {
 		return eventJSON;
 	}
 
-	private static JSONArray toJSONArray(Collection<SensorData> sensorData) {
+	private static JSONArray toJSONArray(Collection<SensorData> sensorData, boolean noLux) {
 		JSONArray dataArrayJSON = new JSONArray();
 		for(SensorData data : sensorData) {
-			dataArrayJSON.put(data.toJSON());
+			dataArrayJSON.put(data.toJSON(noLux));
 		}
 		return dataArrayJSON;
 	}
@@ -153,16 +160,13 @@ public class SensorData {
 	}
 
 	public boolean fireDetected(long tempReading) {
-
 		if (tempBuffer.isEmpty()) {
 			minReading = tempReading;
 			maxReading = tempReading;
 		} 
-		
 		if(tempBuffer.size() == BUFFER_SIZE) {
 			tempBuffer.poll();
 		} 
-		
 		tempBuffer.add(tempReading);
 		
 		if(tempReading > maxReading) {
@@ -174,7 +178,6 @@ public class SensorData {
 		if(maxReading - minReading >= TEMP_TRESHOLD) {
 			return true;
 		}
-		
 		return false;
 	}
 

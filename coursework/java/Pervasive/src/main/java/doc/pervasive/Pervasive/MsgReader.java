@@ -1,43 +1,3 @@
-/*									tab:4
- * "Copyright (c) 2000-2005 The Regents of the University  of California.  
- * All rights reserved.
- *
- * Permission to use, copy, modify, and distribute this software and
- * its documentation for any purpose, without fee, and without written
- * agreement is hereby granted, provided that the above copyright
- * notice, the following two paragraphs and the author appear in all
- * copies of this software.
- * 
- * IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY
- * PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
- * DAMAGES ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS
- * DOCUMENTATION, EVEN IF THE UNIVERSITY OF CALIFORNIA HAS BEEN
- * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
- * THE UNIVERSITY OF CALIFORNIA SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATION TO
- * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS."
- *
- * Copyright (c) 2002-2005 Intel Corporation
- * All rights reserved.
- *
- * This file is distributed under the terms in the attached INTEL-LICENSE     
- * file. If you do not find these files, copies can be found by writing to
- * Intel Research Berkeley, 2150 Shattuck Avenue, Suite 1300, Berkeley, CA, 
- * 94704.  Attention:  Intel License Inquiry.
- */
-/* Authors:	Phil Levis <pal@cs.berkeley.edu>
- * Date:        December 1 2005
- * Desc:        Generic Message reader
- *               
- */
-
-/**
- * @author Phil Levis <pal@cs.berkeley.edu>
- */
-
 package doc.pervasive.Pervasive;
 
 import java.util.*;
@@ -48,11 +8,11 @@ import net.tinyos.util.*;
 
 public class MsgReader implements net.tinyos.message.MessageListener {
 
-	public static final int MESSAGE_TYPE_DEFAULT = 1;
-	public static final int MESSAGE_TYPE_POTENTIAL_FIRE = 0;
+	public static final String INFO = "INFO: ";
+	public static final String ERROR = "ERROR: ";
 
 	private MoteIF moteIF;
-	private MsgDispatcher dispatcher;
+	public MsgDispatcher dispatcher;
   
 	public MsgReader() {
 		this.dispatcher = new MsgDispatcher();
@@ -68,27 +28,25 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 		}
 	}
 
-	public void start() {
-	}
-  
+	/**
+	 * At the moment we're never sending Lux to the visualizer
+	 */
 	public void messageReceived(int to, Message message) {
-		// Has to take values from MsgDispatcher.MESSAGE_TYPE_*
-		int eventType = MsgDispatcher.MESSAGE_TYPE_DEFAULT;;
+		int eventType = MsgDispatcher.MESSAGE_TYPE_DATA;
 		SensorData sensorData = new SensorData((SensorMsg) message);
-	  
-		System.out.println("RECEIVED MESSAGE!");
-		System.out.println(sensorData.getTemp());
-		System.out.println(sensorData.getLux() + "******");
-		
-		if(sensorData.getEventType() != MESSAGE_TYPE_POTENTIAL_FIRE) {
+		System.out.println(INFO + "Message Received!");
+		System.out.println(INFO + "Temperature: " + sensorData.getTemp());
+		System.out.println(INFO + "Lux: " + sensorData.getLux());
+		System.out.println("#######################################");
+	
+		if(sensorData.getEventType() != MsgDispatcher.MESSAGE_TYPE_FIRE) {
 			dispatcher.sendSensorDataToCouchDB(sensorData);
 		} else if (sensorData.fireDetected(sensorData.getTemp())) {
 			eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
 		}
-		dispatcher.sendDataToVisualiser(sensorData, eventType);
+		dispatcher.sendDataToVisualiser(sensorData, eventType, true);
 	}
 
-  
 	private static void usage() {
 		System.err.println("usage: MsgReader [-comm <source>] message-class [message-class ...]");
 	}
@@ -118,9 +76,10 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 						else {
 							v.addElement(msg);
 						}
-					}
-					catch (Exception e) {
-						System.err.println(e);
+					} catch (ClassNotFoundException e) {
+						System.out.println(ERROR + "Wrong class name!");
+						e.printStackTrace();
+						return;
 					}
 				}
 			}
@@ -136,6 +95,6 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 			Message m = (Message)msgs.nextElement();
 			msgReader.addMsgType(m);
 		}
-		msgReader.start();
 	}
+
 }

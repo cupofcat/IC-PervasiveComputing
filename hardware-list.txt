@@ -1,5 +1,0 @@
-- 3 nodes (8350-0334-04, DOC009, DOC030, DOC025)
-- 2 sensing boards (8350-0401-02, )
-- 1 programmator (DOC039)
-- 1 USB cable
-- 4 Duracell Plus AA batteries

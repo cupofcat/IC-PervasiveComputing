@@ -3,6 +3,7 @@
  * This class implements a Java interface to the 'SensorMsg'
  * message type.
  */
+package doc.pervasive.Pervasive;
 
 public class SensorMsg extends net.tinyos.message.Message {
 

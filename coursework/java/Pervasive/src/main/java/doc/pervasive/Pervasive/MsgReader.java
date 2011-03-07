@@ -38,6 +38,8 @@
  * @author Phil Levis <pal@cs.berkeley.edu>
  */
 
+package doc.pervasive.Pervasive;
+
 import java.util.*;
 
 import net.tinyos.message.*;

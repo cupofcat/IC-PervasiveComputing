@@ -1,3 +1,5 @@
+package doc.pervasive.Pervasive;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,18 +20,20 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.ClientResource;
 
-
 public class MsgDispatcher {
 
+	public static final int MESSAGE_TYPE_FIRE = 0;
+	public static final int MESSAGE_TYPE_DEFAULT = 1;
+	
 	private static HttpClient httpClient = new DefaultHttpClient();
 	private static HttpPost httpPost;
+	private static HttpResponse response;
+	
 	private static final String BASE_URL = "http:146.169.36.125:8080/energy-data-service/";
 	private static final String DATA = "data";
 	private static final String EVENT = "event";
-	private static HttpResponse response;
 	private static final String COUCH_DB_URL = "http://146.169.36.132:5984/sensor_readings/";
-	public static final int MESSAGE_TYPE_FIRE = 0;
-	public static final int MESSAGE_TYPE_DEFAULT = 1;
+	
 		  
 	private Collection<SensorData> sensorData;
 	private JSONObject dataJSON;
@@ -116,6 +120,6 @@ public class MsgDispatcher {
 			System.out.println("Received response(couchDB):" + r.getText());
 		} catch (IOException e) {
 			e.printStackTrace();
-		} 
+		}
 	}
 }

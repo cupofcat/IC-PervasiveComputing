@@ -73,10 +73,8 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 	System.out.println(INFO + "Lux: " + sensorData.getLux());
 	System.out.println("#######################################");
 
-	
-	if(sensorData.getEventType() != MsgDispatcher.MESSAGE_TYPE_FIRE) {
-		dispatcher.sendSensorDataToCouchDB(sensorData);
-	} else if (sensorData.fireDetected(sensorData.getTemp())) {
+	dispatcher.sendSensorDataToCouchDB(sensorData);
+	if (sensorData.fireDetected(sensorData.getTemp())) {
 		eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
 	}
 	dispatcher.sendDataToVisualiser(sensorData, eventType, true);

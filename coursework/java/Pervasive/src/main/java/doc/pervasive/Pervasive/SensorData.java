@@ -1,8 +1,7 @@
 package doc.pervasive.Pervasive;
 
 import java.util.Collection;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,6 +10,8 @@ import org.json.JSONObject;
 
 public class SensorData {
 
+	public static int[] luxes = new int[2];
+	
 	private static final double A = 0.001010024;
 	private static final double B = 0.000242127;
 	private static final double C = 0.000000146;
@@ -25,11 +26,9 @@ public class SensorData {
 	private static final String EVENT_TYPE_FIRE = "FIRE";
 	private static final String EVENT_MSG_FIRE = "FIRE has broken out!";
 	private static final int BUFFER_SIZE = 10;
-	private static final long TEMP_TRESHOLD = 5;
+	private static final double TEMP_TRESHOLD = 5.0;
 	
-	private Queue<Double> tempBuffer;
-	private double minReading;
-	private double maxReading; 
+	private LinkedList<Double> tempBuffer;
 	
 	private int lux;
 	private double temp;
@@ -38,7 +37,7 @@ public class SensorData {
 	private int eventType;
 
 	public SensorData() {
-		this.tempBuffer = new LinkedBlockingQueue<Double>();
+		this.tempBuffer = new LinkedList<Double>();
 		this.lux = 0;
 		this.temp = 0;
 		this.nodeId = 0;
@@ -47,12 +46,13 @@ public class SensorData {
 	}
 
 	public SensorData(SensorMsg sMessage) {
-		this.tempBuffer = new LinkedBlockingQueue<Double>();
+		this.tempBuffer = new LinkedList<Double>();
 		this.lux = sMessage.get_raw_light();
 		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
 		this.nodeId = sMessage.get_node_id();
 		this.timestamp = System.currentTimeMillis();
 		this.eventType = sMessage.get_event_type();
+		luxes[nodeId % 2] = this.lux;
 	}
 	
 	public int getLux() {
@@ -168,23 +168,20 @@ public class SensorData {
 	}
 
 	public boolean fireDetected(double tempReading) {
-		if (tempBuffer.isEmpty()) {
-			minReading = tempReading;
-			maxReading = tempReading;
-		} 
+
 		if(tempBuffer.size() == BUFFER_SIZE) {
 			tempBuffer.poll();
 		} 
 		tempBuffer.add(tempReading);
-		
-		if(tempReading > maxReading) {
-			maxReading = tempReading;
-		} else if (tempReading < minReading) {
-			minReading = tempReading;
+		if (luxes[0] >= 100 || luxes[1] >= 100) {
+			return false;
 		}
-		
-		if(maxReading - minReading >= TEMP_TRESHOLD) {
-			return true;
+		for (int i = 0; i < tempBuffer.size(); ++i) {
+			for (int j = i + 1; j < tempBuffer.size(); ++j) {
+				if (tempBuffer.get(j) - tempBuffer.get(i) > TEMP_TRESHOLD) {
+					return true;
+				}
+			}
 		}
 		return false;
 	}

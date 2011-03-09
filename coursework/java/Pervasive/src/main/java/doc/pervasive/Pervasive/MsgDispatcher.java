@@ -15,6 +15,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.restlet.Client;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
@@ -37,10 +38,12 @@ public class MsgDispatcher {
 	private Collection<SensorData> sensorData;
 	private String errorCode;
 	private String errorMessage;
+	private ClientResource client;
 	private int id = 0;
 	
 	public MsgDispatcher(int id) {
 		httpClient = new DefaultHttpClient();
+		this.client = new ClientResource(COUCH_DB_URL + id);
 		this.id = id;
 	}
 		
@@ -145,8 +148,8 @@ public class MsgDispatcher {
 
 		Representation request =
 				new StringRepresentation(json.toString(), MediaType.APPLICATION_JSON);
-		
-		ClientResource client = new ClientResource(COUCH_DB_URL + id);
+
+		client.setReference(COUCH_DB_URL + id);
 		id++;
 		Representation r = client.put(request);
 	    try {

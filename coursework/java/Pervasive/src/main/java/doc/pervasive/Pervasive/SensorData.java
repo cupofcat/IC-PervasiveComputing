@@ -11,6 +11,13 @@ import org.json.JSONObject;
 
 public class SensorData {
 
+	private static final double A = 0.001010024;
+	private static final double B = 0.000242127;
+	private static final double C = 0.000000146;
+	private static final double R1 = 10000;
+	private static final double ADC_FS = 1023;
+	private static final double KELVIN_TO_C = 273.15;
+	
 	private static final String ERROR = "ERROR: ";
 	private static final String GROUP_ID = "8";
 	private static final String KEY = "StoAhjeg";
@@ -20,18 +27,18 @@ public class SensorData {
 	private static final int BUFFER_SIZE = 10;
 	private static final long TEMP_TRESHOLD = 5;
 	
-	private Queue<Long> tempBuffer;
-	private long minReading;
-	private long maxReading; 
+	private Queue<Double> tempBuffer;
+	private double minReading;
+	private double maxReading; 
 	
 	private int lux;
-	private int temp;
+	private double temp;
 	private int nodeId;
 	private long timestamp;
 	private int eventType;
 
 	public SensorData() {
-		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.tempBuffer = new LinkedBlockingQueue<Double>();
 		this.lux = 0;
 		this.temp = 0;
 		this.nodeId = 0;
@@ -40,7 +47,7 @@ public class SensorData {
 	}
 
 	public SensorData(SensorMsg sMessage) {
-		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.tempBuffer = new LinkedBlockingQueue<Double>();
 		this.lux = sMessage.get_raw_light();
 		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
 		this.nodeId = sMessage.get_node_id();
@@ -56,7 +63,7 @@ public class SensorData {
 		this.lux = lux;
 	}
 
-	public int getTemp() {
+	public double getTemp() {
 		return temp;
 	}
 
@@ -88,9 +95,10 @@ public class SensorData {
 		this.eventType = eventType;
 	}
 
-	private int normaliseToCelsius(int getRawTemp) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double normaliseToCelsius(int getRawTemp) {
+		double rThr = R1 * (ADC_FS - getRawTemp) / getRawTemp;
+		double rLog = Math.log(rThr);
+		return 1.0 / (A + B * rLog + C * Math.pow(rLog, 3.0)) - KELVIN_TO_C;
 	}
 	
 	public JSONObject toJSON(boolean noLux) {
@@ -98,7 +106,7 @@ public class SensorData {
 		try {
 			dataJSON.put("sensorId", nodeId);
 			dataJSON.put("timestamp", timestamp);
-			dataJSON.put("temp", !noLux ? temp : null);
+			dataJSON.put("temp", noLux ? temp : null);
 			dataJSON.put("lux", noLux ? null : lux);
 		} catch (JSONException e) {
 			System.out.println(ERROR + "Building of individual sensor data JSONObject failed!");
@@ -159,7 +167,7 @@ public class SensorData {
 		return documentJSON;
 	}
 
-	public boolean fireDetected(long tempReading) {
+	public boolean fireDetected(double tempReading) {
 		if (tempBuffer.isEmpty()) {
 			minReading = tempReading;
 			maxReading = tempReading;
@@ -179,10 +187,6 @@ public class SensorData {
 			return true;
 		}
 		return false;
-	}
-
-	public int normaliseTemperatureReading(long tempReading) {
-		return 10;
 	}
 
 }

@@ -33,15 +33,15 @@ public class MsgDispatcher {
 	private static final String ERROR = "ERROR: ";
 	private static final String INFO = "INFO: ";
 
-	private static long id = 0;
-
 	private HttpClient httpClient;
 	private Collection<SensorData> sensorData;
 	private String errorCode;
 	private String errorMessage;
-
-	public MsgDispatcher() {
+	private int id = 0;
+	
+	public MsgDispatcher(int id) {
 		httpClient = new DefaultHttpClient();
+		this.id = id;
 	}
 		
 	public void sendDataToVisualiser(SensorData message, int eventType, boolean noLux) {
@@ -145,8 +145,9 @@ public class MsgDispatcher {
 
 		Representation request =
 				new StringRepresentation(json.toString(), MediaType.APPLICATION_JSON);
-		++id;
+		
 		ClientResource client = new ClientResource(COUCH_DB_URL + id);
+		id++;
 		Representation r = client.put(request);
 	    try {
 			System.out.println(INFO + "Received response(couchDB):" + r.getText());

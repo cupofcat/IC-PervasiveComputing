@@ -36,7 +36,7 @@ implementation
   {
     if (result == SUCCESS)
     {
-      call SendToBaseTimer.startPeriodic(1000);
+      call SendToBaseTimer.startPeriodic(4000);
     }
     else
     {

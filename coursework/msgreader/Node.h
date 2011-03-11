@@ -4,8 +4,8 @@
 const uint16_t RAW_LIGHT_TRESHOLD = 100;
 
 const uint8_t RED_LED = 1;
-const uint8_t GREEN_LED = 2;
-const uint8_t YELLOW_LED = 4;
+const uint8_t YELLOW_LED = 2;
+const uint8_t ORANGE_LED = 4;
 
 enum {
   AM_SENSORSREADINGSMSG = 10

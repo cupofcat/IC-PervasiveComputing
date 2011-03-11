@@ -1,8 +1,7 @@
 package doc.pervasive.Pervasive;
 
 import java.util.Collection;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,35 +10,49 @@ import org.json.JSONObject;
 
 public class SensorData {
 
+	public static int[] luxes = new int[2];
+	
+	private static final double A = 0.001010024;
+	private static final double B = 0.000242127;
+	private static final double C = 0.000000146;
+	private static final double R1 = 10000;
+	private static final double ADC_FS = 1023;
+	private static final double KELVIN_TO_C = 273.15;
+	
+	private static final String ERROR = "ERROR: ";
 	private static final String GROUP_ID = "8";
 	private static final String KEY = "StoAhjeg";
 	private static final String GROUP_NAME = "Group8";
 	private static final String EVENT_TYPE_FIRE = "FIRE";
 	private static final String EVENT_MSG_FIRE = "FIRE has broken out!";
 	private static final int BUFFER_SIZE = 10;
-	private static final long TEMP_TRESHOLD = 5;
+	private static final double TEMP_TRESHOLD = 5.0;
 	
-	private Queue<Long> tempBuffer;
-	private long minReading;
-	private long maxReading; 
+	private LinkedList<Double> tempBuffer;
 	
 	private int lux;
-	private int temp;
+	private double temp;
 	private int nodeId;
 	private long timestamp;
 	private int eventType;
 
 	public SensorData() {
-		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.tempBuffer = new LinkedList<Double>();
+		this.lux = 0;
+		this.temp = 0;
+		this.nodeId = 0;
+		this.timestamp = 0;
+		this.eventType = 0;
 	}
 
 	public SensorData(SensorMsg sMessage) {
-		this.tempBuffer = new LinkedBlockingQueue<Long>();
+		this.tempBuffer = new LinkedList<Double>();
 		this.lux = sMessage.get_raw_light();
 		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
 		this.nodeId = sMessage.get_node_id();
 		this.timestamp = System.currentTimeMillis();
 		this.eventType = sMessage.get_event_type();
+		luxes[nodeId % 2] = this.lux;
 	}
 	
 	public int getLux() {
@@ -50,7 +63,7 @@ public class SensorData {
 		this.lux = lux;
 	}
 
-	public int getTemp() {
+	public double getTemp() {
 		return temp;
 	}
 
@@ -82,34 +95,36 @@ public class SensorData {
 		this.eventType = eventType;
 	}
 
-	private int normaliseToCelsius(int getRawTemp) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double normaliseToCelsius(int getRawTemp) {
+		double rThr = R1 * (ADC_FS - getRawTemp) / getRawTemp;
+		double rLog = Math.log(rThr);
+		return 1.0 / (A + B * rLog + C * Math.pow(rLog, 3.0)) - KELVIN_TO_C;
 	}
-
-	public JSONObject toJSON() {
+	
+	public JSONObject toJSON(boolean noLux) {
 		JSONObject dataJSON = new JSONObject();
 		try {
 			dataJSON.put("sensorId", nodeId);
 			dataJSON.put("timestamp", timestamp);
-			dataJSON.put("temp", temp);
-			dataJSON.put("lux", lux);
+			dataJSON.put("temp", noLux ? temp : null);
+			dataJSON.put("lux", noLux ? null : lux);
 		} catch (JSONException e) {
-			System.out.println("Building of individual sensor data JSONObject failed!");
+			System.out.println(ERROR + "Building of individual sensor data JSONObject failed!");
 			e.printStackTrace();
 		}
 		return dataJSON;
 	}
 
-	public static JSONObject buildSensorDataJSON(Collection<SensorData> sensorData) {
+	public static JSONObject buildSensorDataJSON(
+			Collection<SensorData> sensorData, boolean noLux) {
 		JSONObject sensorDataJSON = new JSONObject();
 		try {
 			sensorDataJSON.put("groupId", GROUP_ID);
 			sensorDataJSON.put("key", KEY);
 			sensorDataJSON.put("groupName", GROUP_NAME);
-			sensorDataJSON.put("sensorData", toJSONArray(sensorData));
+			sensorDataJSON.put("sensorData", toJSONArray(sensorData, noLux));
 		} catch (JSONException e) {
-			System.out.println("Building of collective sensor data JSONObject failed!");
+			System.out.println(ERROR + "Building of collective sensor data JSONObject failed!");
 			e.printStackTrace();
 		}
 		return sensorDataJSON;
@@ -130,10 +145,10 @@ public class SensorData {
 		return eventJSON;
 	}
 
-	private static JSONArray toJSONArray(Collection<SensorData> sensorData) {
+	private static JSONArray toJSONArray(Collection<SensorData> sensorData, boolean noLux) {
 		JSONArray dataArrayJSON = new JSONArray();
 		for(SensorData data : sensorData) {
-			dataArrayJSON.put(data.toJSON());
+			dataArrayJSON.put(data.toJSON(noLux));
 		}
 		return dataArrayJSON;
 	}
@@ -152,34 +167,23 @@ public class SensorData {
 		return documentJSON;
 	}
 
-	public boolean fireDetected(long tempReading) {
+	public boolean fireDetected(double tempReading) {
 
-		if (tempBuffer.isEmpty()) {
-			minReading = tempReading;
-			maxReading = tempReading;
-		} 
-		
 		if(tempBuffer.size() == BUFFER_SIZE) {
 			tempBuffer.poll();
 		} 
-		
 		tempBuffer.add(tempReading);
-		
-		if(tempReading > maxReading) {
-			maxReading = tempReading;
-		} else if (tempReading < minReading) {
-			minReading = tempReading;
+		if (luxes[0] >= 100 || luxes[1] >= 100) {
+			return false;
 		}
-		
-		if(maxReading - minReading >= TEMP_TRESHOLD) {
-			return true;
+		for (int i = 0; i < tempBuffer.size(); ++i) {
+			for (int j = i + 1; j < tempBuffer.size(); ++j) {
+				if (tempBuffer.get(j) - tempBuffer.get(i) > TEMP_TRESHOLD) {
+					return true;
+				}
+			}
 		}
-		
 		return false;
-	}
-
-	public int normaliseTemperatureReading(long tempReading) {
-		return 10;
 	}
 
 }

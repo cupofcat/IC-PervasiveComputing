@@ -9,12 +9,21 @@ module NodeC
   uses interface Packet;
   uses interface AMSend as BaseStationSend; //TODO: Change the name - we're broadcasting
   uses interface SplitControl as RadioControl;
+
+  uses interface Leds;
 }
 implementation
 {
   bool send_to_base_busy = FALSE;
   SensorsReadingsMsg* readings;
   message_t pkt;
+
+  void flash(uint8_t color)
+  {
+    call LedsFlasher.set(color);
+    call LedsFlasher.start(300, 200);
+    call LedsTimer.startOneShot(400);
+  }
 
   /** INITIALISATIONS **/
 
@@ -27,7 +36,7 @@ implementation
   {
     if (result == SUCCESS)
     {
-      call SendToBaseTimer.startPeriodic(1000);
+      call SendToBaseTimer.startPeriodic(4000);
     }
     else
     {
@@ -57,6 +66,10 @@ implementation
 
   event void SensorsRead.readDone()
   {
+    // Set the rest of the fields
+    readings->node_id    = TOS_NODE_ID;
+    readings->event_type = 1;
+
     // Broadcast the readings
     if (call BaseStationSend.send(AM_BROADCAST_ADDR,
                                   &pkt,
@@ -70,6 +83,7 @@ implementation
   {
     if (&pkt == msg)
     {
+      flash(GREEN_LED);
       send_to_base_busy = FALSE;
     }
   }

@@ -1,0 +1,18 @@
+function(doc) {
+  if (doc.temp && doc.lux) {
+    var timestamp = Math.round(doc.time / 10000) * 10000;
+    emit(new Date(timestamp).toLocaleString(), [doc.temp, doc.lux]);
+  }
+}
+
+
+function(key, values) {
+  var sumTemp = 0;
+  var sumLux = 0;
+  
+  for(i in values) {
+    sumTemp += values[i][0];
+    sumLux += values[i][1];
+  }
+  return [(sumTemp/values.length), (sumLux/values.length)]; 
+}

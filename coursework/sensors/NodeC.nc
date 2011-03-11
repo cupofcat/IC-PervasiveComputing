@@ -5,9 +5,7 @@ module NodeC
   uses interface SensorsRead;
   uses interface LightReceiver;
   uses interface LedsFlasher as ReceiveFlasher;
-  uses interface LedsFlasher as SendFlasher;
   uses interface Timer<TMilli> as ReceiveTimer;
-  uses interface Timer<TMilli> as SendTimer;
   uses interface Packet;
   uses interface AMSend as BaseStationSend; //TODO: Change the name - we're broadcasting
   uses interface SplitControl as RadioControl;
@@ -20,13 +18,6 @@ implementation
   SensorsReadingsMsg* readings;
   message_t pkt;
 
-  void flash(uint8_t color)
-  {
-    call SendFlasher.set(color);
-    call SendFlasher.start(250, 150);
-    call SendTimer.startOneShot(600);
-  }
-
   /** INITIALISATIONS **/
 
   event void Boot.booted()
@@ -38,7 +29,7 @@ implementation
   {
     if (result == SUCCESS)
     {
-      call SendToBaseTimer.startPeriodic(2000);
+      call SendToBaseTimer.startPeriodic(1000);
     }
     else
     {
@@ -57,8 +48,6 @@ implementation
     if (!send_to_base_busy)
     {
       // Obtain the address of payload inside the packet
-      // TODO: This possibly can be called only once, because the address
-      //       to pkt is always the same (?)
       readings = (SensorsReadingsMsg*)(call Packet.getPayload(&pkt,
                                                 sizeof (SensorsReadingsMsg)));
     
@@ -84,7 +73,6 @@ implementation
   {
     if (&pkt == msg)
     {
-      flash(GREEN_LED);
       send_to_base_busy = FALSE;
     }
   }
@@ -108,10 +96,5 @@ implementation
   event void ReceiveTimer.fired()
   {
     call ReceiveFlasher.stop();
-  }
-
-  event void SendTimer.fired()
-  {
-    call SendFlasher.stop();
   }
 }

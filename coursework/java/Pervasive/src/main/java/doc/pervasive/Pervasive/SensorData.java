@@ -85,7 +85,8 @@ public class SensorData {
 	private double normaliseToCelsius(int getRawTemp) {
 		double rThr = R1 * (ADC_FS - getRawTemp) / getRawTemp;
 		double rLog = Math.log(rThr);
-		return 1.0 / (A + B * rLog + C * Math.pow(rLog, 3.0)) - KELVIN_TO_C;
+		double exactResult = 1.0 / (A + B * rLog + C * Math.pow(rLog, 3.0)) - KELVIN_TO_C;
+		return (double)((long)(100 * exactResult)) / 100;
 	}
 	
 	public JSONObject toJSON(boolean noLux) {

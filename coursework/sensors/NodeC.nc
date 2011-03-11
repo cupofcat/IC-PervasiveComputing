@@ -4,8 +4,10 @@ module NodeC
   uses interface Timer<TMilli> as SendToBaseTimer;
   uses interface SensorsRead;
   uses interface LightReceiver;
-  uses interface LedsFlasher;
-  uses interface Timer<TMilli> as LedsTimer;
+  uses interface LedsFlasher as ReceiveFlasher;
+  uses interface LedsFlasher as SendFlasher;
+  uses interface Timer<TMilli> as ReceiveTimer;
+  uses interface Timer<TMilli> as SendTimer;
   uses interface Packet;
   uses interface AMSend as BaseStationSend; //TODO: Change the name - we're broadcasting
   uses interface SplitControl as RadioControl;
@@ -20,9 +22,9 @@ implementation
 
   void flash(uint8_t color)
   {
-    call LedsFlasher.set(color);
-    call LedsFlasher.start(300, 200);
-    call LedsTimer.startOneShot(400);
+    call SendFlasher.set(color);
+    call SendFlasher.start(250, 150);
+    call SendTimer.startOneShot(600);
   }
 
   /** INITIALISATIONS **/
@@ -36,7 +38,7 @@ implementation
   {
     if (result == SUCCESS)
     {
-      call SendToBaseTimer.startPeriodic(4000);
+      call SendToBaseTimer.startPeriodic(2000);
     }
     else
     {
@@ -68,7 +70,6 @@ implementation
   {
     // Set the rest of the fields
     readings->node_id    = TOS_NODE_ID;
-    readings->event_type = 1;
 
     // Broadcast the readings
     if (call BaseStationSend.send(AM_BROADCAST_ADDR,
@@ -92,20 +93,25 @@ implementation
 
   event void LightReceiver.receiveDark()
   {
-    call LedsFlasher.set(RED_LED);
-    call LedsFlasher.start(4, 1);
-    call LedsTimer.startOneShot(20);
+    call ReceiveFlasher.set(RED_LED);
+    call ReceiveFlasher.start(150, 100);
+    call ReceiveTimer.startOneShot(800);
   }
 
   event void LightReceiver.receiveLight()
   {
-    call LedsFlasher.set(YELLOW_LED);
-    call LedsFlasher.start(4, 1);
-    call LedsTimer.startOneShot(20);
+    call ReceiveFlasher.set(YELLOW_LED);
+    call ReceiveFlasher.start(150, 100);
+    call ReceiveTimer.startOneShot(800);
   }
 
-  event void LedsTimer.fired()
+  event void ReceiveTimer.fired()
   {
-    call LedsFlasher.stop();
+    call ReceiveFlasher.stop();
+  }
+
+  event void SendTimer.fired()
+  {
+    call SendFlasher.stop();
   }
 }

@@ -78,7 +78,7 @@ public class MsgReader implements net.tinyos.message.MessageListener {
 		eventType = MsgDispatcher.MESSAGE_TYPE_FIRE;
 	}
 	dispatcher.sendDataToVisualiser(sensorData, eventType, true);
-	
+	dispatcher.sendDataToVisualiser(sensorData, eventType, false);
   }
 
   

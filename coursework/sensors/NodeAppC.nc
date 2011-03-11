@@ -23,17 +23,27 @@ implementation
   LedsFlasherC.PeriodTimer -> LedsTimer1;
   LedsFlasherC.TurnOffTimer -> LedsTimer2;
 
+  components LedsFlasherC as LedsFlasherC2;
+  components new TimerMilliC() as LedsTimer12;
+  components new TimerMilliC() as LedsTimer22;
+  LedsFlasherC2.Leds -> LedsC;
+  LedsFlasherC2.PeriodTimer -> LedsTimer12;
+  LedsFlasherC2.TurnOffTimer -> LedsTimer22;
+
   components NodeC as App;
   components MainC;
   components new TimerMilliC() as BaseStationTimer;
   components new TimerMilliC() as LedsTimer3;
+  components new TimerMilliC() as LedsTimer4;
   components ActiveMessageC;  
   components new AMSenderC(AM_SENSORSREADINGSMSG) as BaseStationSender;
   App -> MainC.Boot;
   App.SensorsRead -> SensorsReadC;
   App.LightReceiver -> LightReceiverC;
-  App.LedsFlasher -> LedsFlasherC;
-  App.LedsTimer -> LedsTimer3;
+  App.SendFlasher -> LedsFlasherC;
+  App.SendTimer -> LedsTimer3;
+  App.ReceiveFlasher -> LedsFlasherC2;
+  App.ReceiveTimer -> LedsTimer4;
   App.SendToBaseTimer -> BaseStationTimer;
   App.RadioControl -> ActiveMessageC;
   App.Packet -> BaseStationSender;

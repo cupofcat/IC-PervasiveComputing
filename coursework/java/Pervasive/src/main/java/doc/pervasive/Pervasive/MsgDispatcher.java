@@ -15,7 +15,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.restlet.Client;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
@@ -26,7 +25,8 @@ public class MsgDispatcher {
 	public static final int MESSAGE_TYPE_FIRE = 0;
 	public static final int MESSAGE_TYPE_DATA = 1;
 	
-	private static final String BASE_URL = "http://146.169.36.125:8080/energy-data-service/energyData/";
+	private static final String BASE_URL = 
+			"http://146.169.36.125:8080/energy-data-service/energyData/";
 	private static final String DATA = "data";
 	private static final String EVENT = "event";
 	private static final String COUCH_DB_URL = "http://146.169.36.132:5984/sensor_readings/";
@@ -42,7 +42,7 @@ public class MsgDispatcher {
 	private int id = 0;
 	
 	public MsgDispatcher(int id) {
-		httpClient = new DefaultHttpClient();
+		this.httpClient = new DefaultHttpClient();
 		this.client = new ClientResource(COUCH_DB_URL + id);
 		this.id = id;
 	}
@@ -144,7 +144,7 @@ public class MsgDispatcher {
 	 */
 	public void sendSensorDataToCouchDB(SensorData message) {
 		JSONObject json = message.buildSensorDataJSONForCouchDB();
-		System.out.println("Sending the following json to CouchDB: " + json);
+		System.out.println(INFO + "Sending the following json to CouchDB: " + json);
 
 		Representation request =
 				new StringRepresentation(json.toString(), MediaType.APPLICATION_JSON);

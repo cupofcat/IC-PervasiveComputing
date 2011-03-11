@@ -1,7 +1,7 @@
 package doc.pervasive.Pervasive;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,33 +25,28 @@ public class SensorData {
 	private static final String GROUP_NAME = "Group8";
 	private static final String EVENT_TYPE_FIRE = "FIRE";
 	private static final String EVENT_MSG_FIRE = "FIRE has broken out!";
-	private static final int BUFFER_SIZE = 10;
+	private static final int BUFFER_SIZE = 30;
 	private static final double TEMP_TRESHOLD = 5.0;
 	
-	private LinkedList<Double> tempBuffer;
+	private static ArrayList<Double> tempBuffer = new ArrayList<Double>();
 	
 	private int lux;
 	private double temp;
 	private int nodeId;
 	private long timestamp;
-	private int eventType;
 
 	public SensorData() {
-		this.tempBuffer = new LinkedList<Double>();
 		this.lux = 0;
 		this.temp = 0;
 		this.nodeId = 0;
 		this.timestamp = 0;
-		this.eventType = 0;
 	}
 
 	public SensorData(SensorMsg sMessage) {
-		this.tempBuffer = new LinkedList<Double>();
 		this.lux = sMessage.get_raw_light();
 		this.temp = normaliseToCelsius(sMessage.get_raw_temp());
 		this.nodeId = sMessage.get_node_id();
 		this.timestamp = System.currentTimeMillis();
-		this.eventType = sMessage.get_event_type();
 		luxes[nodeId % 2] = this.lux;
 	}
 	
@@ -85,14 +80,6 @@ public class SensorData {
 
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
-	}
-
-	public int getEventType() {
-		return eventType;
-	}
-
-	public void setEventType(int eventType) {
-		this.eventType = eventType;
 	}
 
 	private double normaliseToCelsius(int getRawTemp) {
@@ -170,8 +157,8 @@ public class SensorData {
 	public boolean fireDetected(double tempReading) {
 
 		if(tempBuffer.size() == BUFFER_SIZE) {
-			tempBuffer.poll();
-		} 
+			tempBuffer.remove(0);
+		}
 		tempBuffer.add(tempReading);
 		if (luxes[0] >= 100 || luxes[1] >= 100) {
 			return false;

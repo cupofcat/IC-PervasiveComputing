@@ -1,5 +1,12 @@
 #include "Node.h"
 
+/**
+ * The interface for obtaining the readings from light and temperature
+ * sensors. The pointer to the structure where the readings are written
+ * must be provided upon calling read()!
+ *
+ * When the readings are obtained the readDone() event is signalled.
+ */
 interface SensorsRead
 {
   /**

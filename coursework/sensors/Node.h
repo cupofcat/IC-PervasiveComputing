@@ -1,12 +1,15 @@
 #ifndef NODE_H__
 #define NODE_H__
 
-const uint16_t RAW_LIGHT_TRESHOLD = 100;
+// Constant for LightReceiverC
+const uint16_t RAW_LIGHT_THRESHOLD = 100;
 
+// Constants for LedsFlasherC
 const uint8_t RED_LED = 1;
 const uint8_t GREEN_LED = 2;
 const uint8_t YELLOW_LED = 4;
 
+// Message type
 enum {
   AM_SENSORSREADINGSMSG = 10
 };
@@ -17,8 +20,9 @@ typedef nx_struct SensorsReadingsMsg {
   nx_uint16_t raw_light;
 } SensorsReadingsMsg;
 
+// Constant for NodeC
 enum {
-  SEND_TO_BASE_INTERVALS = 1000,
+  SEND_TO_BASE_INTERVAL_MS = 1000,
 };
 
 #endif
